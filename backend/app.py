@@ -26,70 +26,92 @@ def generate_itinerary():
     if not groq_client or not gmaps_client:
         return jsonify({"error": "API clients not configured"}), 500
 
-    # Get data from the request
     data = request.get_json()
     destination = data.get("destination")
     duration = data.get("duration")
-    interests = data.get("interests")
+    interests = data.get("interests", "")
     plans = data.get("plans", "") 
 
-    if not all([destination, duration, interests]):
+    if not destination or not duration:
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        # 1. Geocode destination for more context
         geocode_result = gmaps_client.geocode(destination)
         if geocode_result:
             formatted_address = geocode_result[0]['formatted_address']
             location_context = f"The user wants to go to {formatted_address}."
         else:
             location_context = f"The user wants to go to {destination}."
+            
+        user_prompt_interests = interests if interests else "General sightseeing and local cuisine"
 
-        # 2. --- FIX: Added a new rule for logistical feasibility and travel time ---
         system_prompt = f"""
 You are a meticulous and fact-based travel planner. Your primary goal is absolute geographical and factual accuracy.
 
 **NON-NEGOTIABLE RULES:**
-1.  **No Invention:** You are strictly forbidden from inventing names of places, museums, restaurants, or any landmarks. Every recommendation MUST be a real, verifiable location.
+1.  **No Invention:** You are strictly forbidden from inventing names of places, museums, restaurants, or any landmarks.
 2.  **Strict Location Constraint:** ALL recommendations MUST be located strictly within the city of **'{destination}'**.
-3.  **Admit When Unsure:** If you cannot find a real location within **'{destination}'** that perfectly matches the user's niche interests (e.g., a specific "vintage car museum"), you MUST state that a specific museum of that type doesn't exist in the city. Then, suggest the closest available real alternative or a general activity. Do NOT create a fictional name.
-4.  **Logistical Feasibility:** You MUST create a realistic schedule, considering travel time and grouping nearby attractions. Day trips should consume the entire day.
-"""
+3.  **Admit When Unsure:** If you cannot find a real location that matches a niche interest, state that and suggest a real alternative.
+4.  **Logistical Feasibility:** You MUST create a realistic schedule, considering travel time and grouping nearby attractions.
+5.  **Strict Formatting:** Your response MUST ONLY contain the itinerary. The response must begin directly with the first day's heading and end immediately after the last activity of the final day.
 
+**EXAMPLE OF PERFECT FORMATTING:**
+## Day 1: Arrival and Historical Sites
+* **Morning (9:00 AM - 12:00 PM):** Arrive and explore **Rajwada Palace**.
+* **Lunch (12:30 PM - 1:30 PM):** Enjoy local street food at **Sarafa Bazaar**.
+* **Afternoon (2:00 PM - 4:00 PM):** Visit the **Lal Bagh Palace**.
+"""
         user_prompt = f"""
         Please create a travel itinerary based on these details, following all of your rules.
-
         - **Destination:** {destination}
         - **Trip Duration:** {duration}
-        - **Traveler's Interests:** {interests}
+        - **Traveler's Interests:** {user_prompt_interests}
         - **Location Context from Google Maps:** {location_context}
         """
-        
         if plans:
             user_prompt += f"\n- **Existing Plans to Incorporate:** The traveler has these existing plans that you MUST build the schedule around: '{plans}'."
+        user_prompt += "\n\nPlease provide a day-by-day plan. Format the output clearly with markdown."
 
-        user_prompt += """
-
-        Please provide a day-by-day plan. Format the output clearly with markdown for headings (e.g., ## Day 1) and bolding for names (e.g., **Shaniwar Wada**).
-        """
-
-        # 3. Call Groq AI API
         chat_completion = groq_client.chat.completions.create(
             messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt,
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                }
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
-            model="llama3-8b-8192",
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
         )
 
         itinerary = chat_completion.choices[0].message.content
-        return jsonify({"itinerary": itinerary})
+
+        # --- FINAL FIX: Line-by-Line Structural Filtering ---
+        
+        # 1. Split the raw output into individual lines
+        lines = itinerary.split('\n')
+        
+        # 2. Prepare a list to hold only the valid, structured lines
+        clean_lines = []
+        
+        # 3. A flag to track when we've hit the start of the actual itinerary
+        itinerary_started = False
+        
+        # 4. Iterate through each line and discard anything that is not part of the structure
+        for line in lines:
+            stripped_line = line.strip()
+            
+            # The itinerary officially starts when we find the first "## Day" heading
+            if stripped_line.startswith("## Day"):
+                itinerary_started = True
+            
+            # Once started, only keep lines that are headings, bullet points, or empty for spacing
+            if itinerary_started:
+                if (stripped_line.startswith("##") or 
+                    stripped_line.startswith("*") or 
+                    stripped_line == ""):
+                    clean_lines.append(line)
+
+        # 5. Join the clean lines back into a final, pure itinerary string
+        final_itinerary = "\n".join(clean_lines)
+
+        return jsonify({"itinerary": final_itinerary.strip()})
 
     except Exception as e:
         print(f"An error occurred: {e}")

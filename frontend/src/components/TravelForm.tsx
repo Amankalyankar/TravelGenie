@@ -27,12 +27,12 @@ export const TravelForm = ({ onSubmit, isLoading }: TravelFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.destination && formData.duration && ) {
+    if (formData.destination && formData.duration  ) {
       onSubmit(formData);
     }
   };
 
-  const isFormValid = formData.destination && formData.duration && ;
+  const isFormValid = formData.destination && formData.duration  ;
 
   return (
     <Card className="w-full max-w-2xl mx-auto p-8 card-gradient shadow-lg border-0 animate-slide-up">
