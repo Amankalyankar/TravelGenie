@@ -47,6 +47,8 @@ export const LoadingState = () => {
           </div>
         </div>
       </div>
+      
     </Card>
+    
   );
 };

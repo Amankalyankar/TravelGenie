@@ -9,6 +9,7 @@ interface TravelFormData {
   destination: string;
   duration: string;
   interests: string;
+  plans: string;
 }
 
 interface TravelFormProps {
@@ -20,17 +21,18 @@ export const TravelForm = ({ onSubmit, isLoading }: TravelFormProps) => {
   const [formData, setFormData] = useState<TravelFormData>({
     destination: '',
     duration: '',
-    interests: ''
+    interests: '',
+    plans: '', // FIX 1: Added missing 'plans' property
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.destination && formData.duration && formData.interests) {
+    if (formData.destination && formData.duration && ) {
       onSubmit(formData);
     }
   };
 
-  const isFormValid = formData.destination && formData.duration && formData.interests;
+  const isFormValid = formData.destination && formData.duration && ;
 
   return (
     <Card className="w-full max-w-2xl mx-auto p-8 card-gradient shadow-lg border-0 animate-slide-up">
@@ -52,7 +54,7 @@ export const TravelForm = ({ onSubmit, isLoading }: TravelFormProps) => {
               Where would you like to go?
             </label>
             <Input
-              placeholder="e.g., Paris, France or Tokyo, Japan"
+              placeholder="e.g., Pune , Mumbai , Indore "
               value={formData.destination}
               onChange={(e) => setFormData(prev => ({ ...prev, destination: e.target.value }))}
               className="h-12 text-base border-border/50 focus:border-primary transition-colors"
@@ -89,8 +91,24 @@ export const TravelForm = ({ onSubmit, isLoading }: TravelFormProps) => {
               disabled={isLoading}
             />
           </div>
+          
+          {/* Plans Input */}
+            <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Heart className="w-4 h-4 text-primary" />
+              Any plans ? Let us know!
+            </label>
+            {/* FIX 2: Corrected value and onChange for 'plans' */}
+            <Textarea
+              placeholder="e.g., 'Have a dinner reservation at 8 PM on Day 2 '"
+              value={formData.plans}
+              onChange={(e) => setFormData(prev => ({ ...prev, plans: e.target.value }))}
+              className="min-h-20 text-base border-border/50 focus:border-primary transition-colors resize-none"
+              disabled={isLoading}
+            />
+            </div>
         </div>
-
+        {/* FIX 3: Removed extra closing </div> tag that was here */}
         <Button
           type="submit"
           variant="hero"

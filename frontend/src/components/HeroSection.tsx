@@ -1,4 +1,5 @@
 import heroImage from '@/assets/hero-travel.jpg';
+import { ArrowDownCircle } from 'lucide-react'; // 1. Import a clear icon
 
 interface HeroSectionProps {
   onScrollToForm: () => void;
@@ -25,7 +26,7 @@ export const HeroSection = ({ onScrollToForm }: HeroSectionProps) => {
         </h1>
         
         <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
-          Let AI create the perfect personalized itinerary for your dream destination. 
+          Let us create the perfect personalized itinerary for your dream destination. 
           From hidden gems to must-see attractions.
         </p>
 
@@ -37,23 +38,15 @@ export const HeroSection = ({ onScrollToForm }: HeroSectionProps) => {
           >
             Start Planning Your Trip
           </button>
-          
-          <button
-            onClick={onScrollToForm}
-            className="px-8 py-4 border-2 border-white text-white font-semibold rounded-lg 
-                     hover:bg-white hover:text-primary transform hover:scale-105 
-                     transition-all duration-300"
-          >
-            Learn More
-          </button>
         </div>
+      </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/60 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-pulse"></div>
-          </div>
-        </div>
+      {/* --- FIX: Replaced the old icon with a better, clickable one --- */}
+      {/* 2. The old scroll indicator is replaced with this new, improved version */}
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
+        <button onClick={onScrollToForm} className="animate-bounce">
+          <ArrowDownCircle className="w-10 h-10 text-white/70 hover:text-white transition-colors" />
+        </button>
       </div>
     </section>
   );

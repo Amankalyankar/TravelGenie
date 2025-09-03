@@ -3,6 +3,8 @@ import { HeroSection } from '@/components/HeroSection';
 import { TravelForm } from '@/components/TravelForm';
 import { LoadingState } from '@/components/LoadingState';
 import { ItineraryDisplay } from '@/components/ItineraryDisplay';
+// Make sure you import useToast if you want to show error messages
+import { useToast } from "@/hooks/use-toast";
 
 interface TravelFormData {
   destination: string;
@@ -17,66 +19,46 @@ const Index = () => {
   const [itinerary, setItinerary] = useState<string>('');
   const [currentDestination, setCurrentDestination] = useState<string>('');
   const formRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast(); // Initialize the toast hook
 
   const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: 'smooth' });
+    formRef.current?.scrollIntoView({ behavior: 'smooth' , block: 'center'});
   };
 
   const handleFormSubmit = async (formData: TravelFormData) => {
     setState('loading');
     setCurrentDestination(formData.destination);
     
-    // Simulate API call - replace with actual API integration
+    // START OF CHANGES: Replace the mock API call with a real fetch request
     try {
-      // Mock API response for demonstration
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      const mockItinerary = `🌟 ${formData.destination} - ${formData.duration} Itinerary
+      const response = await fetch('http://127.0.0.1:5000/api/generate-itinerary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-📍 Day 1: Arrival & First Impressions
-• Arrive and check into your accommodation
-• Take a leisurely walk around the city center
-• Visit a local café for authentic cuisine
-• Evening: Sunset viewing at a scenic spot
+      if (!response.ok) {
+        // Try to get a specific error message from the backend
+        const errorData = await response.json().catch(() => ({ error: "An unknown error occurred." }));
+        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+      }
 
-📍 Day 2: Cultural Exploration
-Based on your interest in ${formData.interests}:
-• Morning: Visit the main cultural attractions
-• Afternoon: Guided tour of historical sites
-• Evening: Local restaurant experience
-
-📍 Day 3: Adventure & Activities
-• Outdoor activities based on your preferences
-• Local market exploration
-• Hands-on cultural experience
-• Evening: Entertainment district
-
-📍 Day 4: Hidden Gems
-• Off-the-beaten-path locations
-• Local artisan workshops
-• Traditional food tour
-• Photography spots
-
-📍 Day 5: Relaxation & Departure
-• Final shopping for souvenirs
-• Spa or relaxation time
-• Last-minute exploration
-• Departure preparations
-
-💡 Local Tips:
-• Best times to visit popular attractions
-• Transportation recommendations
-• Cultural etiquette to keep in mind
-• Emergency contacts and useful phrases
-
-This itinerary is customized based on your interests in ${formData.interests} and designed for your ${formData.duration} stay in ${formData.destination}.`;
-
-      setItinerary(mockItinerary);
+      const result = await response.json();
+      setItinerary(result.itinerary);
       setState('result');
+
     } catch (error) {
       console.error('Error generating itinerary:', error);
-      setState('form');
+      toast({
+        title: "Oh no! Something went wrong.",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+      setState('form'); // Go back to the form on error
     }
+    // END OF CHANGES
   };
 
   const handleBackToForm = () => {
@@ -87,10 +69,8 @@ This itinerary is customized based on your interests in ${formData.interests} an
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - only show when in form state */}
       {state === 'form' && <HeroSection onScrollToForm={scrollToForm} />}
       
-      {/* Main Content */}
       <main className="py-16 px-6">
         <div ref={formRef} className="container mx-auto">
           {state === 'form' && (
@@ -104,7 +84,8 @@ This itinerary is customized based on your interests in ${formData.interests} an
                   itinerary that matches your interests and travel style.
                 </p>
               </div>
-              <TravelForm onSubmit={handleFormSubmit} isLoading={false} />
+              {/* CHANGE: Make the isLoading prop dynamic based on the app state */}
+              <TravelForm onSubmit={handleFormSubmit} isLoading={state === 'loading'} />
             </div>
           )}
           

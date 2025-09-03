@@ -89,6 +89,7 @@ export const ItineraryDisplay = ({ itinerary, destination, onBack }: ItineraryDi
           Create Another Itinerary
         </Button>
       </div>
-    </div>
+    
+  </div>
   );
 };
