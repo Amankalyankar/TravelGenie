@@ -1,6 +1,6 @@
 # TravelGenie ✈️
 
-TravelGenie is an AI-powered travel itinerary generator that creates personalized, day-by-day travel plans. It uses Groq's high-speed Llama 4 Scout model for generation, the Google Maps API for geographical accuracy, and a sleek, responsive frontend built with React and Tailwind CSS.
+TravelGenie is an AI-powered travel itinerary generator that creates personalized, day-by-day travel plans. 
 
 
 ## About The Project
