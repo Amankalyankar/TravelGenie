@@ -45,6 +45,7 @@ def generate_itinerary():
             
         user_prompt_interests = interests if interests else "General sightseeing and local cuisine"
 
+        # --- PROMPT IMPROVEMENT: Added a rule for activity line formatting ---
         system_prompt = f"""
 You are a meticulous and fact-based travel planner. Your primary goal is absolute geographical and factual accuracy.
 
@@ -53,13 +54,14 @@ You are a meticulous and fact-based travel planner. Your primary goal is absolut
 2.  **Strict Location Constraint:** ALL recommendations MUST be located strictly within the city of **'{destination}'**.
 3.  **Admit When Unsure:** If you cannot find a real location that matches a niche interest, state that and suggest a real alternative.
 4.  **Logistical Feasibility:** You MUST create a realistic schedule, considering travel time and grouping nearby attractions.
-5.  **Strict Formatting:** Your response MUST ONLY contain the itinerary. The response must begin directly with the first day's heading and end immediately after the last activity of the final day.
+5.  **Strict Formatting:** Your response MUST ONLY contain the itinerary. It must begin directly with the first day's heading (e.g., '## Day 1...') and end immediately after the last activity of the final day.
+6.  **Activity Lines:** All specific activities, times, and descriptions MUST be on their own lines as plain text. Do not start them with any special characters like '*'.
 
 **EXAMPLE OF PERFECT FORMATTING:**
 ## Day 1: Arrival and Historical Sites
-* **Morning (9:00 AM - 12:00 PM):** Arrive and explore **Rajwada Palace**.
-* **Lunch (12:30 PM - 1:30 PM):** Enjoy local street food at **Sarafa Bazaar**.
-* **Afternoon (2:00 PM - 4:00 PM):** Visit the **Lal Bagh Palace**.
+Morning (9:00 AM - 12:00 PM): Arrive and explore Rajwada Palace.
+Lunch (12:30 PM - 1:30 PM): Enjoy local street food at Sarafa Bazaar.
+Afternoon (2:00 PM - 4:00 PM): Visit the Lal Bagh Palace.
 """
         user_prompt = f"""
         Please create a travel itinerary based on these details, following all of your rules.
@@ -82,33 +84,23 @@ You are a meticulous and fact-based travel planner. Your primary goal is absolut
 
         itinerary = chat_completion.choices[0].message.content
 
-        # --- FINAL FIX: Line-by-Line Structural Filtering ---
-        
-        # 1. Split the raw output into individual lines
+        # --- CRUCIAL FIX: Simplified the filter to keep all relevant lines ---
         lines = itinerary.split('\n')
-        
-        # 2. Prepare a list to hold only the valid, structured lines
         clean_lines = []
-        
-        # 3. A flag to track when we've hit the start of the actual itinerary
         itinerary_started = False
         
-        # 4. Iterate through each line and discard anything that is not part of the structure
         for line in lines:
             stripped_line = line.strip()
             
             # The itinerary officially starts when we find the first "## Day" heading
-            if stripped_line.startswith("## Day"):
+            if not itinerary_started and stripped_line.startswith("## Day"):
                 itinerary_started = True
             
-            # Once started, only keep lines that are headings, bullet points, or empty for spacing
+            # Once the itinerary has started, append every subsequent line.
+            # This relies on the strict prompt to prevent conversational text at the end.
             if itinerary_started:
-                if (stripped_line.startswith("##") or 
-                    stripped_line.startswith("*") or 
-                    stripped_line == ""):
-                    clean_lines.append(line)
+                clean_lines.append(line)
 
-        # 5. Join the clean lines back into a final, pure itinerary string
         final_itinerary = "\n".join(clean_lines)
 
         return jsonify({"itinerary": final_itinerary.strip()})

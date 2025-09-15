@@ -79,10 +79,6 @@ const Index = () => {
                 <h2 className="text-4xl font-playfair font-bold text-foreground mb-4">
                   Ready to Explore?
                 </h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Tell us about your dream destination and let our AI create a personalized 
-                  itinerary that matches your interests and travel style.
-                </p>
               </div>
               {/* CHANGE: Make the isLoading prop dynamic based on the app state */}
               <TravelForm onSubmit={handleFormSubmit} isLoading={state === 'loading'} />
