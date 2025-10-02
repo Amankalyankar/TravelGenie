@@ -31,7 +31,7 @@ const Index = () => {
 
     try {
       // Use the real fetch request to your Python backend
-      const response = await fetch('http://127.0.0.1:5000/api/generate-itinerary', {
+      const response = await fetch('https://travelgenie-api.onrender.com/api/generate-itinerary',  {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
