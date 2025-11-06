@@ -11,7 +11,7 @@ load_dotenv()
 # Initialize Flask app and CORS
 app = Flask(__name__)
 # Be more specific with CORS for production
-CORS(app, resources={r"/api/*": {"origins": "https://travelgenie123.netlify.app"}})
+CORS(app, resources={r"/api/*": {"origins": "https://travelgenie.amankalyankar.in"}})
 
 # For testing, you can also allow all origins like this, but the above is better for security.
 # CORS(app, resources={r"/api/*": {"origins": "*"}}) 
